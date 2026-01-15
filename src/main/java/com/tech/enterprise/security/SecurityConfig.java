@@ -28,59 +28,63 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // Disable CSRF for REST API
-                .csrf(csrf -> csrf.disable())
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                // Disable CSRF for REST API
+                                .csrf(csrf -> csrf.disable())
 
-                // Configure CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                // Configure CORS
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // Authorization rules
-                .authorizeHttpRequests(auth -> auth
-                        // Permit login endpoint
-                        .requestMatchers(HttpMethod.POST, "/api/*/admins/login").permitAll()
-                        // Permit logout endpoint
-                        .requestMatchers(HttpMethod.POST, "/api/*/admins/logout").permitAll()
-                        // Permit actuator health endpoint
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        // Secure all other API endpoints
-                        .requestMatchers("/api/**").authenticated()
-                        // Permit everything else (static resources, etc.)
-                        .anyRequest().permitAll())
+                                // Authorization rules
+                                .authorizeHttpRequests(auth -> auth
+                                                // Permit login endpoint
+                                                .requestMatchers(HttpMethod.POST, "/api/*/admins/login").permitAll()
+                                                // Permit logout endpoint
+                                                .requestMatchers(HttpMethod.POST, "/api/*/admins/logout").permitAll()
+                                                // Permit actuator health endpoint
+                                                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                                                // Secure all other API endpoints
+                                                .requestMatchers("/api/**").authenticated()
+                                                // Permit everything else (static resources, etc.)
+                                                .anyRequest().permitAll())
 
-                // Use default session management (session-based auth)
-                .sessionManagement(session -> session
-                        .maximumSessions(1)
-                        .maxSessionsPreventsLogin(false))
+                                // Use default session management (session-based auth)
+                                .sessionManagement(session -> session
+                                                .maximumSessions(1)
+                                                .maxSessionsPreventsLogin(false))
 
-                // Disable default form login
-                .formLogin(form -> form.disable())
+                                // Disable default form login
+                                .formLogin(form -> form.disable())
 
-                // Disable HTTP Basic auth
-                .httpBasic(basic -> basic.disable());
+                                // Disable HTTP Basic auth
+                                .httpBasic(basic -> basic.disable());
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+                        throws Exception {
+                return config.getAuthenticationManager();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+                // Hardcoded allowed origins - update this list when deploying your frontend
+                configuration.setAllowedOrigins(List.of(
+                                "http://localhost:5173"));
+
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                configuration.setAllowedHeaders(List.of("*"));
+                configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 }

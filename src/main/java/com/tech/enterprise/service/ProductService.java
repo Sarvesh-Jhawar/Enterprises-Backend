@@ -2,7 +2,9 @@ package com.tech.enterprise.service;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.tech.enterprise.model.Product;
 import com.tech.enterprise.repo.ProductRepository;
@@ -10,39 +12,72 @@ import com.tech.enterprise.repo.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service for product CRUD operations with tenant isolation.
+ * All operations are scoped to the specified tenant.
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+
     private final ProductRepository productRepository;
-    
-    @Transactional //(readOnly = true)
+
+    /**
+     * Get all products for a tenant.
+     */
+    @Transactional
     public List<Product> getProductsByTenantId(Long tenantId) {
         return productRepository.findByTenantId(tenantId);
     }
 
+    /**
+     * Get a single product by ID, ensuring tenant isolation.
+     */
     @Transactional
-    public Product saveProduct(Product product, Long tenantId){
+    public Product getProductById(Long id, Long tenantId) {
+        return productRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Product not found"));
+    }
+
+    /**
+     * Create a new product for the specified tenant.
+     */
+    @Transactional
+    public Product saveProduct(Product product, Long tenantId) {
         // 1. Validation for unique name within the same tenant
-        if(productRepository.existsByNameAndTenantId(product.getName(), tenantId)) {
-            throw new IllegalArgumentException("Product with the same name already exists for this tenant.");
+        if (productRepository.existsByNameAndTenantId(product.getName(), tenantId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Product with the same name already exists for this tenant.");
         }
-        
+
         // 2. Initial save to generate the Database ID
         product.setTenantId(tenantId);
         Product savedProduct = productRepository.save(product);
-        
+
         // 3. Generate the simple image name: product_name_tenantID_productID
         String simpleImageName = generateSimpleName(savedProduct);
         savedProduct.setImageName(simpleImageName);
-        
+
         // 4. Final save to store the image name
         return productRepository.save(savedProduct);
     }
 
+    /**
+     * Update an existing product, ensuring tenant isolation.
+     */
     @Transactional
     public Product updateProduct(Long id, Product details, Long tenantId) {
         Product existing = productRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Product not found"));
+
+        // Check if name is being changed to an existing name
+        if (!existing.getName().equals(details.getName()) &&
+                productRepository.existsByNameAndTenantId(details.getName(), tenantId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Product with the same name already exists for this tenant.");
+        }
 
         // Update fields
         existing.setName(details.getName());
@@ -59,14 +94,27 @@ public class ProductService {
     }
 
     /**
-     * Helper method to generate the simple name format
+     * Soft delete a product by setting active=false.
+     */
+    @Transactional
+    public void deleteProduct(Long id, Long tenantId) {
+        Product product = productRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Product not found"));
+
+        product.setActive(false);
+        productRepository.save(product);
+    }
+
+    /**
+     * Helper method to generate the simple name format.
      */
     private String generateSimpleName(Product product) {
         String cleanName = product.getName().toLowerCase()
-                                 .trim()
-                                 .replaceAll("[^a-z0-9]+", "_")
-                                 .replaceAll("^_+|_+$", "");
-        
+                .trim()
+                .replaceAll("[^a-z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
+
         // Format: name_tenantId_productId
         return cleanName + "_" + product.getTenantId() + "_" + product.getId();
     }

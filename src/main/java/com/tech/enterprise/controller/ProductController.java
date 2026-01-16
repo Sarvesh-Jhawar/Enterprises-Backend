@@ -39,14 +39,21 @@ public class ProductController {
     private final TenantResolver tenantResolver;
 
     /**
+     * Resolve tenant from URL slug. Used for public endpoints.
+     */
+    private Long resolveTenantId(String tenantSlug) {
+        return tenantResolver.resolveTenant(tenantSlug).getId();
+    }
+
+    /**
      * Validate that the authenticated admin belongs to the tenant specified in URL.
-     * This enforces strict tenant isolation.
+     * This enforces strict tenant isolation for admin actions.
      * 
      * @param tenantSlug The tenant slug from URL
      * @return The validated tenant ID
      * @throws ResponseStatusException 403 if tenant mismatch
      */
-    private Long validateTenantAccess(String tenantSlug) {
+    private Long validateAdminTenantAccess(String tenantSlug) {
         // Get current authenticated admin
         AdminUserDetails currentAdmin = adminAuthService.getCurrentAdmin();
         if (currentAdmin == null) {
@@ -72,7 +79,7 @@ public class ProductController {
      */
     @GetMapping
     public List<Product> getAll(@PathVariable String tenantSlug) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = resolveTenantId(tenantSlug);
         return productService.getProductsByTenantId(tenantId);
     }
 
@@ -83,7 +90,7 @@ public class ProductController {
      */
     @GetMapping("/{id}")
     public Product getById(@PathVariable String tenantSlug, @PathVariable Long id) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = resolveTenantId(tenantSlug);
         return productService.getProductById(id, tenantId);
     }
 
@@ -94,7 +101,7 @@ public class ProductController {
      */
     @PostMapping
     public Product create(@PathVariable String tenantSlug, @RequestBody Product product) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
         return productService.saveProduct(product, tenantId);
     }
 
@@ -107,7 +114,7 @@ public class ProductController {
     public Product update(@PathVariable String tenantSlug,
             @PathVariable Long id,
             @RequestBody Product product) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
         return productService.updateProduct(id, product, tenantId);
     }
 
@@ -118,7 +125,7 @@ public class ProductController {
      */
     @DeleteMapping("/{id}")
     public void delete(@PathVariable String tenantSlug, @PathVariable Long id) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
         productService.deleteProduct(id, tenantId);
     }
 }

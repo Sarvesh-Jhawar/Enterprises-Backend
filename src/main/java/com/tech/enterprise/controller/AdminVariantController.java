@@ -30,7 +30,14 @@ public class AdminVariantController {
     private final AdminAuthService adminAuthService;
     private final TenantResolver tenantResolver;
 
-    private Long validateTenantAccess(String tenantSlug) {
+    /**
+     * Resolve tenant from URL slug. Used for public endpoints.
+     */
+    private Long resolveTenantId(String tenantSlug) {
+        return tenantResolver.resolveTenant(tenantSlug).getId();
+    }
+
+    private Long validateAdminTenantAccess(String tenantSlug) {
         AdminUserDetails currentAdmin = adminAuthService.getCurrentAdmin();
         if (currentAdmin == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
@@ -54,7 +61,7 @@ public class AdminVariantController {
     public List<ProductVariant> getVariants(
             @PathVariable String tenantSlug,
             @PathVariable Long productId) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = resolveTenantId(tenantSlug);
         return variantService.getVariantsByProductId(productId, tenantId);
     }
 
@@ -67,7 +74,7 @@ public class AdminVariantController {
             @PathVariable String tenantSlug,
             @PathVariable Long productId,
             @RequestBody ProductVariant variant) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
         return variantService.saveVariant(productId, variant, tenantId);
     }
 
@@ -80,7 +87,7 @@ public class AdminVariantController {
             @PathVariable String tenantSlug,
             @PathVariable Long variantId,
             @RequestBody ProductVariant variant) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
         return variantService.updateVariant(variantId, variant, tenantId);
     }
 
@@ -92,7 +99,7 @@ public class AdminVariantController {
     public void deleteVariant(
             @PathVariable String tenantSlug,
             @PathVariable Long variantId) {
-        Long tenantId = validateTenantAccess(tenantSlug);
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
         variantService.deleteVariant(variantId, tenantId);
     }
 }

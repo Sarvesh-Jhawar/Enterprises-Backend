@@ -51,16 +51,22 @@ public class ProductService {
                     "Product with the same name already exists for this tenant.");
         }
 
-        // 2. Initial save to generate the Database ID
+        // 2. Set the tenant context
         product.setTenantId(tenantId);
-        Product savedProduct = productRepository.save(product);
 
-        // 3. Generate the simple image name: product_name_tenantID_productID
-        String simpleImageName = generateSimpleName(savedProduct);
-        savedProduct.setImageName(simpleImageName);
+        // 3. Generate a unique image name BEFORE the first save
+        // This satisfies the NOT NULL constraint in your database
+        String uniqueSuffix = java.util.UUID.randomUUID().toString().substring(0, 8);
+        String cleanName = product.getName().toLowerCase()
+                .trim()
+                .replaceAll("[^a-z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
 
-        // 4. Final save to store the image name
-        return productRepository.save(savedProduct);
+        // Format: name_tenantId_uniqueSuffix
+        product.setImageName(cleanName + "_" + tenantId + "_" + uniqueSuffix);
+
+        // 4. Save the product once
+        return productRepository.save(product);
     }
 
     /**

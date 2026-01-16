@@ -58,11 +58,7 @@ public class ProductService {
      */
     @Transactional
     public Product saveProduct(Product product, Long tenantId) {
-        // 1. Validation
-        if (product.getName() == null || product.getName().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product name is required.");
-        }
-
+        // 1. Validation for unique name within the same tenant
         if (productRepository.existsByNameAndTenantId(product.getName(), tenantId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Product with the same name already exists for this tenant.");
@@ -88,10 +84,6 @@ public class ProductService {
         Product existing = productRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Product not found"));
-
-        if (details.getName() == null || details.getName().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product name is required.");
-        }
 
         // Check if name is being changed to an existing name
         if (!existing.getName().equals(details.getName()) &&

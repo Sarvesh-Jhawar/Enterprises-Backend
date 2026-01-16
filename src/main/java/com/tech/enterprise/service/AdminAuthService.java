@@ -131,4 +131,33 @@ public class AdminAuthService {
         }
         return admin.getTenantId();
     }
+
+    /**
+     * Get the currently authenticated admin's details as a LoginResponse.
+     * 
+     * @return LoginResponse with admin profile
+     * @throws ResponseStatusException 401 if not authenticated
+     */
+    public LoginResponse getCurrentAdminProfile() {
+        AdminUserDetails details = getCurrentAdmin();
+        if (details == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        // We can get tenant details from the Admin entity inside details
+        Long tenantId = details.getTenantId();
+
+        // Since AdminUserDetails doesn't store tenantSlug/Name directly, we fetch the
+        // tenant
+        Tenant tenant = tenantResolver.resolveTenantById(tenantId);
+
+        return LoginResponse.builder()
+                .adminId(details.getAdminId())
+                .username(details.getUsername())
+                .tenantId(tenant.getId())
+                .tenantName(tenant.getName())
+                .tenantSlug(tenant.getSlug())
+                .message("Profile fetched successfully")
+                .build();
+    }
 }

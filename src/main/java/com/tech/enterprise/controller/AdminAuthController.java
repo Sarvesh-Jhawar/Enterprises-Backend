@@ -1,6 +1,7 @@
 package com.tech.enterprise.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -71,5 +72,21 @@ public class AdminAuthController {
 
         adminAuthService.logout(request);
         return ResponseEntity.ok("Logged out successfully");
+    }
+
+    /**
+     * Get current admin profile.
+     * 
+     * GET /api/{tenantSlug}/admins/me
+     * 
+     * @param tenantSlug The tenant slug from URL
+     * @return LoginResponse with admin profile
+     */
+    @GetMapping("/me")
+    public ResponseEntity<LoginResponse> getMe(
+            @PathVariable String tenantSlug) {
+
+        LoginResponse profile = adminAuthService.getCurrentAdminProfile();
+        return ResponseEntity.ok(profile);
     }
 }

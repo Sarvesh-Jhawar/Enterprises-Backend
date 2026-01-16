@@ -38,4 +38,24 @@ public class TenantResolver {
 
         return tenant;
     }
+
+    /**
+     * Resolves tenant from ID.
+     * 
+     * @param id The tenant ID
+     * @return The active Tenant entity
+     * @throws ResponseStatusException 404 if tenant not found, 403 if inactive
+     */
+    public Tenant resolveTenantById(Long id) {
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Tenant not found"));
+
+        if (!Boolean.TRUE.equals(tenant.getActive())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Tenant is inactive");
+        }
+
+        return tenant;
+    }
 }

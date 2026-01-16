@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.tech.enterprise.model.Product;
+import com.tech.enterprise.model.ProductVariant;
 import com.tech.enterprise.model.Tenant;
 import com.tech.enterprise.security.AdminUserDetails;
 import com.tech.enterprise.service.AdminAuthService;
 import com.tech.enterprise.service.ProductService;
+import com.tech.enterprise.service.ProductVariantService;
 import com.tech.enterprise.tenant.TenantResolver;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductVariantService variantService;
     private final AdminAuthService adminAuthService;
     private final TenantResolver tenantResolver;
 
@@ -127,5 +130,57 @@ public class ProductController {
     public void delete(@PathVariable String tenantSlug, @PathVariable Long id) {
         Long tenantId = validateAdminTenantAccess(tenantSlug);
         productService.deleteProduct(id, tenantId);
+    }
+
+    // --- Variant Endpoints ---
+
+    /**
+     * Get all variants for a specific product.
+     * GET /api/{tenantSlug}/products/{productId}/variants
+     */
+    @GetMapping("/{productId}/variants")
+    public List<ProductVariant> getVariants(
+            @PathVariable String tenantSlug,
+            @PathVariable Long productId) {
+        Long tenantId = resolveTenantId(tenantSlug);
+        return variantService.getVariantsByProductId(productId, tenantId);
+    }
+
+    /**
+     * Create a new variant for a product.
+     * POST /api/{tenantSlug}/products/{productId}/variants
+     */
+    @PostMapping("/{productId}/variants")
+    public ProductVariant createVariant(
+            @PathVariable String tenantSlug,
+            @PathVariable Long productId,
+            @RequestBody ProductVariant variant) {
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
+        return variantService.saveVariant(productId, variant, tenantId);
+    }
+
+    /**
+     * Update an existing variant.
+     * PUT /api/{tenantSlug}/products/variants/{variantId}
+     */
+    @PutMapping("/variants/{variantId}")
+    public ProductVariant updateVariant(
+            @PathVariable String tenantSlug,
+            @PathVariable Long variantId,
+            @RequestBody ProductVariant variant) {
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
+        return variantService.updateVariant(variantId, variant, tenantId);
+    }
+
+    /**
+     * Delete a variant (soft delete).
+     * DELETE /api/{tenantSlug}/products/variants/{variantId}
+     */
+    @DeleteMapping("/variants/{variantId}")
+    public void deleteVariant(
+            @PathVariable String tenantSlug,
+            @PathVariable Long variantId) {
+        Long tenantId = validateAdminTenantAccess(tenantSlug);
+        variantService.deleteVariant(variantId, tenantId);
     }
 }

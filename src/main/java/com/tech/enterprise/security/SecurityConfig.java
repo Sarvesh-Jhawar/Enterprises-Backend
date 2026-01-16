@@ -45,8 +45,6 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/*/admins/logout").permitAll()
                                                 // Permit public product access
                                                 .requestMatchers(HttpMethod.GET, "/api/*/products/**").permitAll()
-                                                .requestMatchers(HttpMethod.GET, "/api/*/admin/products/*/variants")
-                                                .permitAll()
                                                 // Permit actuator health endpoint
                                                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                                                 // Secure all other API endpoints

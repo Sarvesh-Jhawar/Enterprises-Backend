@@ -1,5 +1,6 @@
 package com.tech.enterprise.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "admins")
 @Data
 @NoArgsConstructor
-public class Admin {
+public class Admin implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

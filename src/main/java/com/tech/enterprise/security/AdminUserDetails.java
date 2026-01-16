@@ -1,5 +1,6 @@
 package com.tech.enterprise.security;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -13,7 +14,7 @@ import com.tech.enterprise.model.Admin;
  * Custom UserDetails implementation wrapping the Admin entity.
  * Exposes tenant information for tenant-scoped operations.
  */
-public class AdminUserDetails implements UserDetails {
+public class AdminUserDetails implements UserDetails, Serializable {
 
     private final Admin admin;
 

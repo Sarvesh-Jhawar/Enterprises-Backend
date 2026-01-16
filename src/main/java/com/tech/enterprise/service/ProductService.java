@@ -1,6 +1,8 @@
 package com.tech.enterprise.service;
 
 import java.util.List;
+import com.tech.enterprise.model.ProductVariant;
+import com.tech.enterprise.repo.ProductVariantRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductVariantRepository variantRepository;
 
     /**
      * Get all products for a tenant.
@@ -38,6 +41,16 @@ public class ProductService {
         return productRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Product not found"));
+    }
+
+    /**
+     * Get variants for a product, ensuring tenant isolation.
+     */
+    @Transactional
+    public List<ProductVariant> getProductVariants(Long productId, Long tenantId) {
+        // Ensure the product exists and belongs to the tenant
+        getProductById(productId, tenantId);
+        return variantRepository.findByProductIdAndTenantId(productId, tenantId);
     }
 
     /**

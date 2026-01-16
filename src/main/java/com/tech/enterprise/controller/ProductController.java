@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.tech.enterprise.model.Product;
+import com.tech.enterprise.model.ProductVariant;
 import com.tech.enterprise.model.Tenant;
 import com.tech.enterprise.security.AdminUserDetails;
 import com.tech.enterprise.service.AdminAuthService;
@@ -110,7 +111,7 @@ public class ProductController {
      * GET /api/{tenantSlug}/products/{id}/variants
      */
     @GetMapping("/{id}/variants")
-    public List<com.tech.enterprise.model.ProductVariant> getVariants(
+    public List<ProductVariant> getVariants(
             @PathVariable String tenantSlug,
             @PathVariable Long id) {
         Long tenantId = resolveTenantId(tenantSlug);

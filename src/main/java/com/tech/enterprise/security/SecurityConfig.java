@@ -11,6 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
 import java.util.List;
@@ -66,8 +67,7 @@ public class SecurityConfig {
                                 // Return 401 for unauthenticated API requests instead of redirect/403
                                 .exceptionHandling(exceptions -> exceptions
                                                 .authenticationEntryPoint((request, response, authException) -> {
-                                                        response.sendError(
-                                                                        jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED,
+                                                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                                                                         "Unauthorized");
                                                 }));
 

@@ -94,7 +94,6 @@ public class ProductService {
         existing.setActive(details.getActive());
 
         // Regenerate image name in case the product name was changed
-        existing.setImageName(generateSimpleName(existing));
 
         return productRepository.save(existing);
     }
@@ -112,16 +111,4 @@ public class ProductService {
         productRepository.save(product);
     }
 
-    /**
-     * Helper method to generate the simple name format.
-     */
-    private String generateSimpleName(Product product) {
-        String cleanName = product.getName().toLowerCase()
-                .trim()
-                .replaceAll("[^a-z0-9]+", "_")
-                .replaceAll("^_+|_+$", "");
-
-        // Format: name_tenantId_productId
-        return cleanName + "_" + product.getTenantId() + "_" + product.getId();
-    }
 }

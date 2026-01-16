@@ -14,15 +14,23 @@ import com.tech.enterprise.security.AdminUserDetailsService;
 import com.tech.enterprise.tenant.TenantResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.core.context.SecurityContext;
 
 /**
  * Authentication service handling admin login with tenant-aware authentication.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminAuthService {
+
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     private final TenantResolver tenantResolver;
     private final AdminUserDetailsService adminUserDetailsService;
@@ -40,7 +48,7 @@ public class AdminAuthService {
      *                                 if invalid credentials
      */
     public LoginResponse login(String tenantSlug, String username, String password,
-            HttpServletRequest request) {
+            HttpServletRequest request, HttpServletResponse response) {
 
         // 1. Resolve tenant from slug (throws 404/403 if invalid)
         Tenant tenant = tenantResolver.resolveTenant(tenantSlug);
@@ -60,15 +68,18 @@ public class AdminAuthService {
         }
 
         // 4. Create authentication token and set in SecurityContext
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 adminDetails,
                 null,
                 adminDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authToken);
+        context.setAuthentication(authToken);
+        SecurityContextHolder.setContext(context);
 
-        // 5. Create new session for authenticated user
-        HttpSession session = request.getSession(true);
-        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+        // 5. Explicitly save SecurityContext in Repository for Spring Security 6
+        securityContextRepository.saveContext(context, request, response);
+
+        log.info("Admin {} successfully logged in for tenant {}", username, tenantSlug);
 
         // 6. Return success response
         return LoginResponse.builder()

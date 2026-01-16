@@ -12,6 +12,7 @@ import com.tech.enterprise.dto.LoginResponse;
 import com.tech.enterprise.service.AdminAuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -41,15 +42,17 @@ public class AdminAuthController {
     public ResponseEntity<LoginResponse> login(
             @PathVariable String tenantSlug,
             @RequestBody LoginRequest loginRequest,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
-        LoginResponse response = adminAuthService.login(
+        LoginResponse responseData = adminAuthService.login(
                 tenantSlug,
                 loginRequest.getUsername(),
                 loginRequest.getPassword(),
-                request);
+                request,
+                response);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(responseData);
     }
 
     /**

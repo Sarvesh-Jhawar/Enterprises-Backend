@@ -21,8 +21,8 @@ import com.tech.enterprise.service.AdminAuthService;
 import com.tech.enterprise.service.ProductService;
 import com.tech.enterprise.service.ProductVariantService;
 import com.tech.enterprise.tenant.TenantResolver;
-
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Product CRUD controller.
@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/{tenantSlug}/products")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductController {
 
     private final ProductService productService;
@@ -68,6 +69,8 @@ public class ProductController {
 
         // Validate admin's tenant matches URL tenant
         if (!currentAdmin.getTenantId().equals(urlTenant.getId())) {
+            log.error("Tenant mismatch! Admin tenant: {}, URL tenant ({}): {}",
+                    currentAdmin.getTenantId(), tenantSlug, urlTenant.getId());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Access denied: You can only access your own tenant's resources");
         }

@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,10 +31,18 @@ import java.util.List;
 public class SecurityConfig {
 
         @Bean
+        public SecurityContextRepository securityContextRepository() {
+                return new HttpSessionSecurityContextRepository();
+        }
+
+        @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 // Disable CSRF for REST API
                                 .csrf(csrf -> csrf.disable())
+
+                                // Set SecurityContextRepository
+                                .securityContext(sc -> sc.securityContextRepository(securityContextRepository()))
 
                                 // Configure CORS
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -61,7 +71,16 @@ public class SecurityConfig {
                                 .formLogin(form -> form.disable())
 
                                 // Disable HTTP Basic auth
-                                .httpBasic(basic -> basic.disable());
+                                .httpBasic(basic -> basic.disable())
+
+                                // Return 401 instead of 403 for unauthenticated API access
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint((req, res, authEx) -> {
+                                                        res.setStatus(401);
+                                                        res.getWriter().write(
+                                                                        "{\"error\": \"Unauthorized\", \"message\": \""
+                                                                                        + authEx.getMessage() + "\"}");
+                                                }));
 
                 return http.build();
         }

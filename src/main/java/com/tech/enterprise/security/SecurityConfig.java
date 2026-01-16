@@ -76,7 +76,8 @@ public class SecurityConfig {
 
                 // Hardcoded allowed origins - update this list when deploying your frontend
                 configuration.setAllowedOrigins(List.of(
-                                "http://localhost:5173"));
+                                "http://localhost:5173",
+                                "https://shobha-enterprise.vercel.app"));
 
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 configuration.setAllowedHeaders(List.of("*"));

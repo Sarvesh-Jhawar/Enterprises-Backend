@@ -11,7 +11,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,8 +45,6 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/*/admins/logout").permitAll()
                                                 // Permit actuator health endpoint
                                                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                                                // Permit GET requests to product endpoints (public access)
-                                                .requestMatchers(HttpMethod.GET, "/api/*/products/**").permitAll()
                                                 // Secure all other API endpoints
                                                 .requestMatchers("/api/**").authenticated()
                                                 // Permit everything else (static resources, etc.)
@@ -62,14 +59,7 @@ public class SecurityConfig {
                                 .formLogin(form -> form.disable())
 
                                 // Disable HTTP Basic auth
-                                .httpBasic(basic -> basic.disable())
-
-                                // Return 401 for unauthenticated API requests instead of redirect/403
-                                .exceptionHandling(exceptions -> exceptions
-                                                .authenticationEntryPoint((request, response, authException) -> {
-                                                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                                                                        "Unauthorized");
-                                                }));
+                                .httpBasic(basic -> basic.disable());
 
                 return http.build();
         }

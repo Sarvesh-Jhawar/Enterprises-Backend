@@ -61,7 +61,15 @@ public class SecurityConfig {
                                 .formLogin(form -> form.disable())
 
                                 // Disable HTTP Basic auth
-                                .httpBasic(basic -> basic.disable());
+                                .httpBasic(basic -> basic.disable())
+
+                                // Return 401 for unauthenticated API requests instead of redirect/403
+                                .exceptionHandling(exceptions -> exceptions
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.sendError(
+                                                                        jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED,
+                                                                        "Unauthorized");
+                                                }));
 
                 return http.build();
         }

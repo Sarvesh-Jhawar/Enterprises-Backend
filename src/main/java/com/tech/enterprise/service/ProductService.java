@@ -108,7 +108,7 @@ public class ProductService {
                         HttpStatus.NOT_FOUND, "Product not found"));
 
         product.setActive(false);
-        productRepository.save(product);
+        productRepository.delete(product);
     }
 
 }
